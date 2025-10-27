@@ -21,3 +21,7 @@ Also note the difference between `restarted` and `reloaded` in the [ansible.buil
 
 In order for `nginx` to pick up any configuration changes, it's enough to do a `reload` instead of
 a full `restart`.
+
+### Answer
+
+The handler reloads nginx only when the configuration file changes. Reloading is preferred over restarting because it applies config changes without interrupting the service.

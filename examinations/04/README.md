@@ -29,6 +29,22 @@ Create a new file, you can call it what you like, but in the example below, it's
 
 The above is a playbook that will install [nginx](https://nginx.org/), a piece of software that can
 act as a HTTP server, reverse proxy, content cache, load balancer, and more.
+### Answer
+administrator@administrator-Precision-T1650:~/Desktop/AnsibleWorkbook$ ansible-playbook webserver.yml
+
+PLAY [Install a webserver] *************************************************************************************************************
+
+TASK [Gathering Facts] *****************************************************************************************************************
+ok: [192.168.121.209]
+
+TASK [Ensure nginx is installed] *******************************************************************************************************
+changed: [192.168.121.209]
+
+TASK [Ensure nginx is started at boot] *************************************************************************************************
+changed: [192.168.121.209]
+
+PLAY RECAP *****************************************************************************************************************************
+192.168.121.209            : ok=3    changed=2    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
 
 Now, we can run `curl` to see if web server does what we want it to (serve HTTP pages on TCP port 80):
 
@@ -45,6 +61,17 @@ Is the response what we expected?
     * Failed to connect to 192.168.121.10 port 80 after 0 ms: Could not connect to server
     * closing connection #0
     curl: (7) Failed to connect to 192.168.121.10 port 80 after 0 ms: Could not connect to server
+### Answe
+Installed curl first.
+administrator@administrator-Precision-T1650:~/Desktop/AnsibleWorkbook$ curl -v http://webserver
+* Host webserver:80 was resolved.
+* IPv6: (none)
+* IPv4: 192.168.121.209
+*   Trying 192.168.121.209:80...
+* connect to 192.168.121.209 port 80 from 192.168.121.1 port 36416 failed: Connection refused
+* Failed to connect to webserver port 80 after 1 ms: Couldn't connect to server
+* Closing connection
+curl: (7) Failed to connect to webserver port 80 after 1 ms: Couldn't connect to server
 
 # QUESTION A
 
@@ -53,13 +80,15 @@ module.
 
 How can we make the web server start with an addition of just one line to the playbook above?
 
+### Answer
+We have to add the correct state (started) otherwise this service is only enable but not starting.
 # QUESTION B
 
 You make have noted that the `become: true` statement has moved from a specific task to the beginning
 of the playbook, and is on the same indentation level as `tasks:`.
 
 What does this accomplish?
-
+It lets all tasks in playbook will run as root, so I don't have to write become:true in every task.
 # QUESTION C
 
 Copy the above playbook to a new playbook. Call it `04-uninstall-webserver.yml`.
@@ -71,9 +100,29 @@ Run the new playbook, then make sure that the web server is not running (you can
 log in to the machine and make sure that there are no `nginx` processes running.
 
 Why did we change the order of the tasks in the `04-uninstall-webserver.yml` playbook?
+I stop and disable the webserver first because if we remove it first, the service won't exist anymore and Ansiblr can't stop it. 
+
+administrator@administrator-Precision-T1650:~/Desktop/AnsibleWorkbook$ ansible-playbook 04-uninstall-webserver.yml 
+
+PLAY [Uninstall webserver] *************************************************************************************************************
+
+TASK [Gathering Facts] *****************************************************************************************************************
+ok: [192.168.121.209]
+
+TASK [Stop and disable nginx at boot] **************************************************************************************************
+changed: [192.168.121.209]
+
+TASK [Uninstall nginx] *****************************************************************************************************************
+changed: [192.168.121.209]
+
+PLAY RECAP *****************************************************************************************************************************
+192.168.121.209            : ok=3    changed=2    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+
 
 # BONUS QUESTION
 
 Consider the output from the tasks above, and what we were actually doing on the machine.
 
 What is a good naming convention for tasks? (What SHOULD we write in the `name:` field`?)
+
+The name should be clear and says exsctly what the task does. It should start with a verb likse Install, Uninstall , Remove, Start etc. This helps people understand the playbook easier and quickly.

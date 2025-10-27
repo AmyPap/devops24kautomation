@@ -9,6 +9,34 @@ In order to set up our web server to use HTTPS, we need to make a configuration 
 
 Begin by running the [install-cert.yml](install-cert.yml) playbook to generate a self-signed certificate
 in the correct location on the webserver.
+### Answer
+I did a file install-cert and I ran the playbook
+
+administrator@administrator-Precision-T1650:~/Desktop/AnsibleWorkbook$ ansible-playbook install-cert.yml 
+
+PLAY [Set up self-signed certificates for HTTPS] ***************************************************************************************
+
+TASK [Gathering Facts] *****************************************************************************************************************
+ok: [192.168.121.209]
+
+TASK [Ensure the /etc/pki/nginx directory exists] **************************************************************************************
+changed: [192.168.121.209]
+
+TASK [Ensure we have a /etc/pkig/nginx/private directory] ******************************************************************************
+changed: [192.168.121.209]
+
+TASK [Ensure we have necessary software installed] *************************************************************************************
+changed: [192.168.121.209]
+
+TASK [Ensure we have a private key for our certificate] ********************************************************************************
+changed: [192.168.121.209]
+
+TASK [Create a self-signed certificate] ************************************************************************************************
+changed: [192.168.121.209]
+
+PLAY RECAP *****************************************************************************************************************************
+192.168.121.209            : ok=6    changed=5    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+
 
 You may need to install the Ansible `community.crypto` collection first, unless you have
 already done so earlier.
@@ -69,18 +97,45 @@ and acts ONLY on the `web` group from the inventory.
 
 Refer to the official Ansible documentation for this, or work with a classmate to
 build a valid and working playbook, preferrably that conforms to Ansible best practices.
-
+ 
 Run the playbook with `ansible-playbook` and `--verbose` or `-v` as option:
 
     $ ansible-playbook -v 05-web.yml
+
+### Answer
+administrator@administrator-Precision-T1650:~/Desktop/AnsibleWorkbook$ ansible-playbook -v 05-web.yml
+Using /home/administrator/Desktop/AnsibleWorkbook/ansible.cfg as config file
+
+PLAY [HTTPS configuration in nginx] ****************************************************************************************************
+
+TASK [Gathering Facts] *****************************************************************************************************************
+ok: [192.168.121.209]
+
+TASK [copy a path to the webserver] ****************************************************************************************************
+changed: [192.168.121.209] => {"changed": true, "checksum": "6b7873c361aae1ca7921740ed7d6118c1046d84a", "dest": "/etc/nginx/conf.d/https.conf", "gid": 0, "group": "root", "md5sum": "f313640b42d6b9d97e1d496bb82fac6d", "mode": "0644", "owner": "root", "secontext": "system_u:object_r:httpd_config_t:s0", "size": 465, "src": "/home/deploy/.ansible/tmp/ansible-tmp-1761211273.294847-35983-46109165243569/source", "state": "file", "uid": 0}
+
+PLAY RECAP *****************************************************************************************************************************
+192.168.121.209            : ok=2    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0 
+
+[deploy@webserver ~]$ ls -l /etc/nginx/conf.d/
+total 4
+-rw-r--r--. 1 root root 465 Oct 23 09:21 https.conf
+[deploy@webserver ~]$ 
 
 The output from the playbook run contains something that looks suspiciously like JSON, and that contains
 a number of keys and values that come from the output of the Ansible module.
 
 What does the output look like the first time you run this playbook?
+### Answer
+changed: [192.168.121.209] => {"changed": true, "checksum": "6b7873c361aae1ca7921740ed7d6118c1046d84a", "dest": "/etc/nginx/conf.d/https.conf", "gid": 0, "group": "root", "md5sum": "f313640b42d6b9d97e1d496bb82fac6d", "mode": "0644", "owner": "root", "secontext": "system_u:object_r:httpd_config_t:s0", "size": 465, "src": "/home/deploy/.ansible/tmp/ansible-tmp-1761211273.294847-35983-46109165243569/source", "state": "file", "uid": 0}
 
 What does the output look like the second time you run this playbook?
+### Answer
+ASK [copy a path to the webserver] ****************************************************************************************************
+ok: [192.168.121.209] => {"changed": false, "checksum": "6b7873c361aae1ca7921740ed7d6118c1046d84a", "dest": "/etc/nginx/conf.d/https.conf", "gid": 0, "group": "root", "mode": "0644", "owner": "root", "path": "/etc/nginx/conf.d/https.conf", "secontext": "system_u:object_r:httpd_config_t:s0", "size": 465, "state": "file", "uid": 0}
+in green color
 
+The second time, the output says "changed": false which means the file already existed and had the same content so Ansible did not copy it again.
 # QUESTION B
 
 Even if we have copied the configuration to the right place, we still do not have a working https service
@@ -95,6 +150,14 @@ on port 443 on the machine, which is painfully obvious if we try connecting to t
 
 The address above is just an example, and is likely different on your machine. Make sure you use the IP address
 of the webserver VM on YOUR machine.
+### Answer
+
+administrator@administrator-Precision-T1650:~/Desktop/AnsibleWorkbook$ curl -v https://192.168.121.209
+*   Trying 192.168.121.209:443...
+* connect to 192.168.121.209 port 443 from 192.168.121.1 port 40264 failed: Connection refused
+* Failed to connect to 192.168.121.209 port 443 after 0 ms: Couldn't connect to server
+* Closing connection
+curl: (7) Failed to connect to 192.168.121.209 port 443 after 0 ms: Couldn't connect to server
 
 In order to make `nginx` use the new configuration by restarting the service and letting `nginx` re-read
 its configuration.
@@ -105,6 +168,9 @@ On the machine itself we can do this by:
 
 Given what we know about the [ansible.builtin.service](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/service_module.html),
 how can we do this through Ansible?
+
+### Answer
+We can add an extra task after the conf file is copied using the ansible.builtin.service module with state: restarted, to restart nginx and load the new HTTPS settigns.
 
 Add an extra task to the `05-web.yml` playbook to ensure the service is restarted after the configuration
 file is installed.
@@ -124,7 +190,14 @@ a self signed certificate.
 What is the disadvantage of having a task that _always_ makes sure a service is restarted, even if there is
 no configuration change?
 
+### Answer
+It can cause unnecessary downtime and interrupt users connections and waste system resources. It is not idempotent as well.
+
 # BONUS QUESTION
 
 There are at least two _other_ modules, in addition to the `ansible.builtin.service` module that can restart
 a `systemd` service with Ansible. Which modules are they?
+
+### Answer
+
+Ansible.builtin.systemd , use a command like ansible.builtin.command: systemctl restart nginx , We can also use handlers.

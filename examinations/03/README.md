@@ -116,14 +116,59 @@ Now the output looks like this:
     webserver   : ok=2    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
 
 Run the exact same playbook again and study the output. What is the difference?
+### Answer
+
+When I run the playbook with become:true, it fails because the deploy user needs a sudo password.
+This means Ansible cannot continue unless the user has passwordless sudo access. That we fixed at school.
+
+If the user has proper sudo permissions without a password, the first run would install the packages (changed=1) and the second run would detect they are already installed and skip the task. This is how Ansible ensures idempotency.
+
+administrator@administrator-Precision-T1650:~/Desktop/AnsibleWorkbook$ ansible-playbook site.yml
+
+PLAY [Install all our favorite software] ***********************************************************************************************
+
+TASK [Gathering Facts] *****************************************************************************************************************
+ok: [192.168.121.209]
+ok: [192.168.121.142]
+
+TASK [Ensure vim, bash-completion, and qemu-guest-agent are installed] *****************************************************************
+changed: [192.168.121.209]
+changed: [192.168.121.142]
+
+PLAY RECAP *****************************************************************************************************************************
+192.168.121.142            : ok=2    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+192.168.121.209            : ok=2    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+
+administrator@administrator-Precision-T1650:~/Desktop/AnsibleWorkbook$ ansible-playbook site.yml
+
+PLAY [Install all our favorite software] ***********************************************************************************************
+
+TASK [Gathering Facts] *****************************************************************************************************************
+ok: [192.168.121.209]
+ok: [192.168.121.142]
+
+TASK [Ensure vim, bash-completion, and qemu-guest-agent are installed] *****************************************************************
+ok: [192.168.121.142]
+ok: [192.168.121.209]
+
+PLAY RECAP *****************************************************************************************************************************
+192.168.121.142            : ok=2    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+192.168.121.209            : ok=2    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+
+administrator@administrator-Precision-T1650:~/Desktop/AnsibleWorkbook$ 
 
 ## QUESTION A
 
 What does the `ansible.builtin.debug` module actually do?
+### Answer
+This module is used to print variables or messages to the screen during playbook execution. It helps with troubleshooting.Here,it printed the hostname of each machine using the ansible_facts.nodename variable.
 
 ## QUESTION B
 
 What is the variable 'ansible_facts' and where does it come from?
+### Answer
+It is a dictionary that contains system information about each host.This information is automatically collected at the beginning of a playbook, in the Gathering Facts step.
+It includes more data like hostname ,OS , IPs and more. Here,we used it to get the machine's hostname with ansible_facts.nodename.
 
 ## QUESTION C
 
@@ -134,6 +179,39 @@ How do we now remove the software we installed through the playbook above? Make 
 playbook remove the exact same software we previously installed. Call the created
 playbook `03-uninstall-software.yml`.
 
+### Answer
+To remove the installed software I created a new playbook that uses state: absent instead of present. This tells Ansible to uninstall the listed packages.
+
+---
+- name: Uninstall the software
+  hosts: all
+  tasks:
+    - name: Remove vim, bash-completion and qemu-guest-agent
+      become: true
+      ansible.builtin.package:
+        name: vim, bash-completion,qemu-quest-agent
+        state: absent
+
+I ran that:
+
+ansible-playbook 03-uninstall-software.yml
+
+administrator@administrator-Precision-T1650:~/Desktop/AnsibleWorkbook$ ansible-playbook 03-uninstall-software.yml 
+
+PLAY [Uninstall the software] **********************************************************************************************************
+
+TASK [Gathering Facts] *****************************************************************************************************************
+ok: [192.168.121.209]
+ok: [192.168.121.142]
+
+TASK [Remove vim, bash-completion and qemu-guest-agent] ********************************************************************************
+changed: [192.168.121.142]
+changed: [192.168.121.209]
+
+PLAY RECAP *****************************************************************************************************************************
+192.168.121.142            : ok=2    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+192.168.121.209            : ok=2    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0  
+
 ## BONUS QUESTION
 
 What happens when you run `ansible-playbook` with different options?
@@ -142,6 +220,14 @@ Explain what each of these options do:
 * --verbose, -vv, -vvv, -vvvv
 * --check
 * --syntax-check
+
+### Answer
+--verbose: shows more output.It helps to understand what Ansible is doing.
+-vv : More detailed output, including task arguments.
+-vvv: Even more info like SSH commands, connection logs and facts.
+-vvvv: Full debug mode, Used mostly for troubleshooting.
+--check: Ansible shows what it would do(dry run mode) but it makes no changes. Used for testing.
+--syntax-check: checks the playbook for syntax errors without running it.
 
 ## Study Material & Documentation
 

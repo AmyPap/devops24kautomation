@@ -1,0 +1,11 @@
+---
+  - name: Check Mariadb status
+    hosts: db
+    become: true
+    tasks:
+     - name: Gather service facts
+       ansible.builtin.service_facts:
+
+     - name: Show mariadb status
+       ansible.builtin.debug:
+         var: ansible_facts.services['mariadb.service']

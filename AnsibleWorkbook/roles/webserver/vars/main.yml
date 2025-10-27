@@ -1,0 +1,22 @@
+---
+ groups_to_create:
+   - wheel
+   - video
+   - audio
+   - tape
+   - tcdump
+
+ users:
+   - name: alovelace
+     groups: ['wheel', 'video', 'audio']
+     gecos: "Ada Lovelace"
+   - name: aturing
+     groups: ['tape']
+     gecos: "Alan Turing"
+   - name: edijkstra
+     groups: ['tcdump']
+     gecos: "Edsger Dijkstra"
+   - name: ghopper
+     groups: ['wheel', 'audio']
+     gecos: "Grace Hopper"
+

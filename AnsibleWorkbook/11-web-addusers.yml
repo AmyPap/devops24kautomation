@@ -1,0 +1,49 @@
+---
+- name: Create Users and Add them in groups
+  hosts: web
+  become: true
+
+  vars:
+    groups_to_create:
+      - wheel
+      - video
+      - audio
+      - tape
+      - tcdump
+
+    users:
+      - name: alovelace
+        groups: ['wheel', 'video', 'audio']
+        gecos: "Ada Lovelace"
+      - name: aturing
+        groups: ['tape']
+        gecos: "Alan Turing"
+      - name: edijkstra
+        groups: ['tcdump']
+        gecos: "Edsger Dijkstra"
+      - name: ghopper
+        groups: ['wheel', 'audio']
+        gecos: "Grace Hopper"
+
+  vars_files:
+      - 11-vault.yml
+
+  tasks:
+
+     - name: Ensure all groups exist
+       ansible.builtin.group:
+         name: "{{ item }}"
+         state: present
+       loop: "{{ groups_to_create }}"
+
+     - name: Add user alovelace
+       ansible.builtin.user:
+         name: "{{ item.name }}"
+         groups: "{{ item.groups | join(',') }}"
+         comment: "{{ item.gecos }}"
+         password: "{{ user_passwords[item.name] | password_hash('sha512') }}"
+         append: yes
+         state: present
+       loop: "{{ users }}"
+
+

@@ -105,6 +105,37 @@ Add a task to the `06-web.yml` playbook BEFORE the web server is restarted that 
 
 You may now rerun the example playbook and see what happens.
 
+### Answer
+
+dministrator@administrator-Precision-T1650:~/Desktop/AnsibleWorkbook$ ansible-playbook 06-web.yml
+
+PLAY [HTTPS configuration in nginx] ****************************************************************************************************
+
+TASK [Gathering Facts] *****************************************************************************************************************
+ok: [192.168.121.209]
+
+TASK [Copy https-conf to nginx config directory] ***************************************************************************************
+ok: [192.168.121.209]
+
+TASK [Ensure the nginx configuration is updated for example.internal] ******************************************************************
+changed: [192.168.121.209]
+
+TASK [Restart nginx to load new HTTPS config] ******************************************************************************************
+changed: [192.168.121.209]
+
+PLAY RECAP *****************************************************************************************************************************
+192.168.121.209            : ok=4    changed=2    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+
+administrator@administrator-Precision-T1650:~/Desktop/AnsibleWorkbook$ curl http://example.internal
+<html>
+<head><title>404 Not Found</title></head>
+<body>
+<center><h1>404 Not Found</h1></center>
+<hr><center>nginx/1.20.1</center>
+</body>
+</html>
+
+
 # QUESTION A
 
 In the `06-web.yml` playbook, add a couple of tasks:
@@ -118,6 +149,21 @@ HINTS:
 * If you want to serve files under a non-standard directory (such as the one we create above), we must
   also set the correct SELinux security context type on the directory and files. The context in question
   in this case should be `httpd_sys_content_t` for the `/var/www/example.internal/html/` directory.
+### Answer
+
+administrator@administrator-Precision-T1650:~/Desktop/AnsibleWorkbook$ curl http://example.internal
+<?xml version="1.0"?>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Hello Nackademin!</title>
+  </head>
+  <body>
+    <h1>Hello Nackademin!</h1>
+    <p>This is a totally awesome web page</p>
+    <p>This page has been uploaded with <a href="https://docs.ansible.com/">Ansible</a>!</p>
+  </body>
+</html>
 
 # QUESTION B
 
@@ -165,7 +211,39 @@ See https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_conditional
 
 There are several ways to accomplish this, and there is no _best_ way to do this with what we've done so far.
 
+
 Is this a good way to handle these types of conditionals? What do you think?
+
+### Answer
+
+I think using register and when gies flexibility when we combine multiple conditions. May handlers is also a valid option because they are designed exactly for this reason.
+
+administrator@administrator-Precision-T1650:~/Desktop/AnsibleWorkbook$ ansible-playbook -v 06-web.yml
+Using /home/administrator/Desktop/AnsibleWorkbook/ansible.cfg as config file
+
+PLAY [HTTPS configuration in nginx] ****************************************************************************************************
+
+TASK [Gathering Facts] *****************************************************************************************************************
+ok: [192.168.121.209]
+
+TASK [Copy https-conf to nginx config directory] ***************************************************************************************
+ok: [192.168.121.209] => {"changed": false, "checksum": "6b7873c361aae1ca7921740ed7d6118c1046d84a", "dest": "/etc/nginx/conf.d/https.conf", "gid": 0, "group": "root", "mode": "0644", "owner": "root", "path": "/etc/nginx/conf.d/https.conf", "secontext": "system_u:object_r:httpd_config_t:s0", "size": 465, "state": "file", "uid": 0}
+
+TASK [Ensure the nginx configuration is updated for example.internal] ******************************************************************
+ok: [192.168.121.209] => {"changed": false, "checksum": "f14c868fe7938837e2e1f365454688de6d70525f", "dest": "/etc/nginx/conf.d/example.internal.conf", "gid": 0, "group": "root", "mode": "0644", "owner": "root", "path": "/etc/nginx/conf.d/example.internal.conf", "secontext": "system_u:object_r:httpd_config_t:s0", "size": 447, "state": "file", "uid": 0}
+
+TASK [Ensure the directory structure for example.internal exists] **********************************************************************
+ok: [192.168.121.209] => {"changed": false, "gid": 0, "group": "root", "mode": "0755", "owner": "root", "path": "/var/www/example.internal/html", "secontext": "unconfined_u:object_r:httpd_sys_content_t:s0", "size": 24, "state": "directory", "uid": 0}
+
+TASK [Upload index.html to the virtual host folder] ************************************************************************************
+ok: [192.168.121.209] => {"changed": false, "checksum": "e232f94466bfdee81506144222cbff0b058712f0", "dest": "/var/www/example.internal/html/index.html", "gid": 0, "group": "root", "mode": "0644", "owner": "root", "path": "/var/www/example.internal/html/index.html", "secontext": "system_u:object_r:httpd_sys_content_t:s0", "size": 308, "state": "file", "uid": 0}
+
+TASK [Restart nginx to load new HTTPS config] ******************************************************************************************
+skipping: [192.168.121.209] => {"changed": false, "false_condition": "https_result.changed or example_result.changed", "skip_reason": "Conditional result was False"}
+
+PLAY RECAP *****************************************************************************************************************************
+192.168.121.209            : ok=5    changed=0    unreachable=0    failed=0    skipped=1    rescued=0    ignored=0   
+
 
 # BONUS QUESTION
 
@@ -177,3 +255,22 @@ would you like the flow to work?
 
 Describe in simple terms what your preferred task flow would look like, not necessarily implemented in
 Ansible, but in general terms.
+
+
+- name: Update nginx config
+  ansible.builtin.copy:
+    src: nginx.conf
+    dest: /etc/nginx/nginx.conf
+  notify: Restart nginx 
+
+handlers:
+  - name: Restart nginx
+    ansible.builtin.service:
+        name: nginx
+        state: restarted
+
+My preferred task flow it to:
+1.Run all the tasks that might change the system (like copying conf files)
+2.Use notify on tasks that could require a restart
+3.Define handlers that only run if something was actually changed
+4.This way, I can restart services only when it's truly necessary and avoid downtime.

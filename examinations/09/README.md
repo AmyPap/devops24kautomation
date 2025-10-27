@@ -23,3 +23,17 @@ instead of as a plain text string in the playbook.
 When the [QUESTION A](#question-a) is solved, use `ansible-vault` to store the password in encrypted
 form, and make it possible to run the playbook as before, but with the password as an
 Ansible Vault secret instead.
+
+### Answer
+
+First I made a file vault.yml and added the password as variable. Then I saved the password in a file called vault_passwd.txt. I encrypted the vault.yml using this command:
+
+ansible-vault encrypt vault.yml --vault-password-file vault_passwd.txt 
+Encryption successful
+
+
+In my playbook I replaced the password with the variable webappdb_password and I used the vars_file to load the vault.yml.
+
+I ran the playbook usign the command
+
+ansible-playbook 09-mariadb-password.yml --vault-password-file vault_passwd.txt

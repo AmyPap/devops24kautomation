@@ -1,0 +1,44 @@
+---
+    - name: HTTPS configuration in nginx
+      hosts: web
+      become: true
+      tasks:
+        - name: Copy https-conf to nginx config directory
+          ansible.builtin.copy:
+             src: files/https.conf
+             dest: /etc/nginx/conf.d/https.conf
+             owner: root
+             group: root
+             mode: '0644'
+          register: https_result
+
+        - name: Ensure the nginx configuration is updated for example.internal
+          ansible.builtin.template:
+            src: templates/example.internal.conf.j2
+            dest: /etc/nginx/conf.d/example.internal.conf
+          register: example_result
+
+        - name: Ensure the directory structure for example.internal exists
+          ansible.builtin.file:
+            path: /var/www/example.internal/html
+            state: directory
+            owner: root
+            group: root
+            mode: '0755'
+            setype: httpd_sys_content_t
+
+        - name: Upload index.html to the virtual host folder
+          ansible.builtin.copy:
+            src: files/index.html
+            dest: /var/www/example.internal/html/index.html
+            owner: root
+            group: root
+            mode: '0644'
+            setype: httpd_sys_content_t
+
+        - name: Restart nginx to load new HTTPS config
+          ansible.builtin.service:
+            name: nginx
+            state: restarted
+          when: https_result.changed or example_result.changed
+

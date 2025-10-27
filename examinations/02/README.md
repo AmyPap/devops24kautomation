@@ -111,10 +111,55 @@ incompatibilities.
 ## QUESTION A
 
 What happens if you run `ansible-inventory --list` in the directory you created above?
+### Answer
+administrator@administrator-Precision-T1650:~/Desktop/AnsibleWorkbook$ ansible-inventory --list
+{
+    "_meta": {
+        "hostvars": {
+            "192.168.121.142": {
+                "ansible_ssh_private_key_file": "~/Desktop/VagrantDirectory/deploy_key",
+                "ansible_user": "deploy"
+            },
+            "192.168.121.209": {
+                "ansible_ssh_private_key_file": "~/Desktop/VagrantDirectory/deploy_key",
+                "ansible_user": "deploy"
+            }
+        }
+    },
+    "all": {
+        "children": [
+            "ungrouped",
+            "db",
+            "web"
+        ]
+    },
+    "db": {
+        "hosts": [
+            "192.168.121.142"
+        ]
+    },
+    "web": {
+        "hosts": [
+            "192.168.121.209"
+        ]
+    }
+}
+
+It's the invetory in JSON format. This is the way that Ansible sees and understands the hosts file. 
 
 ## QUESTION B
 
 What happens if you run `ansible-inventory --graph` in the directory you created above?
+### Answer
+administrator@administrator-Precision-T1650:~/Desktop/AnsibleWorkbook$ ansible-inventory --graph
+@all:
+  |--@ungrouped:
+  |--@db:
+  |  |--192.168.121.142
+  |--@web:
+  |  |--192.168.121.209
+
+Each host belongs in a team.
 
 ## QUESTION C
 
@@ -130,7 +175,35 @@ Now run:
 
 Study the output of this command.
 
+### Answer
+administrator@administrator-Precision-T1650:~/Desktop/AnsibleWorkbook$ ansible -m ping all
+administrator-Precision-T1650 | SUCCESS => {
+    "ansible_facts": {
+        "discovered_interpreter_python": "/usr/bin/python3"
+    },
+    "changed": false,
+    "ping": "pong"
+}
+192.168.121.209 | SUCCESS => {
+    "ansible_facts": {
+        "discovered_interpreter_python": "/usr/bin/python3"
+    },
+    "changed": false,
+    "ping": "pong"
+}
+192.168.121.142 | SUCCESS => {
+    "ansible_facts": {
+        "discovered_interpreter_python": "/usr/bin/python3"
+    },
+    "changed": false,
+    "ping": "pong"
+}
+
+
 What does the `ansible_connection=local` part mean?
+### Answer
+Without  `ansible_connection=local`, Ansible treats every hsot (including localhost) as a remote
+system and tries to connect via SSH. With  `ansible_connection=local` Ansible executes locally all tasks directly.
 
 ## BONUS QUESTION
 
@@ -152,4 +225,23 @@ In your Ansible working directory where the `ansible.cfg' is, run
 
 You should get a pager displaying all available configuration values. How does it differ
 from when you run the same command in your usual home directory?
+
+### Answer
+I used the 'ansible-config' command to learn more about how Ansible settings work.
+First I ran:
+```bash
+ansible-config --help
+```
+This ed all the options I can use with this command.
+Then I created a file with all the default Ansible settings using:
+
+```bash
+ansible-config init > ansible.cfg.init
+```
+Then I used
+```bash
+ansible-config dump
+```
+to check the settings Ansible is using now. The settings I changed in 'ansible.cfg' were shown with the file path next to them and other color not green. This confirmed that my ansible.cfg file is working.
+If I run the same command in another folder without ansible.cfg , only the default settings appear.
 

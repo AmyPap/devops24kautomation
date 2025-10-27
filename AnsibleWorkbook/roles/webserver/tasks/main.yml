@@ -1,0 +1,25 @@
+---
+ - name: Ensure all groups exist
+   ansible.builtin.group:
+     name: "{{ item }}"
+     state: present
+   loop: "{{ groups_to_create }}"
+
+ - name: Add user alovelace
+   ansible.builtin.user:
+     name: "{{ item.name }}"
+     groups: "{{ item.groups | join(',') }}"
+     comment: "{{ item.gecos }}"
+     password: "{{ user_passwords[item.name] | password_hash('sha512') }}"
+     append: yes
+     state: present
+   loop: "{{ users }}"
+ 
+ - name: Copy https config to nginx
+   ansible.builtin.copy:
+     src: "{{ playbook_dir }}/files/https.conf"
+     dest: /etc/nginx/conf.d/https.conf
+     owner: root
+     group: root
+     mode: '0644'
+   notify: reload nginx

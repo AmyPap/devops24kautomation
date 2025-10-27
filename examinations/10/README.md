@@ -33,3 +33,27 @@ Use the `ansible.builtin.template` module to accomplish this task.
 * https://docs.ansible.com/ansible/latest/collections/ansible/builtin/template_module.html
 * https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html
 * https://nginx.org/en/docs/http/ngx_http_core_module.html#listen
+
+### Answer
+
+I did all the steps and then inside the template , I added the variable {{ ansible_default_ipv4.address }}. I also updated the playbook to use the ansible.builtin.template module instead of copy.
+
+I check if it works
+
+administrator@administrator-Precision-T1650:~/Desktop/AnsibleWorkbook$ ansible-playbook 10-web-template-check.yml 
+
+PLAY [Check IPs] ***********************************************************************************************************************
+
+TASK [Gathering Facts] *****************************************************************************************************************
+ok: [192.168.121.209]
+
+TASK [Show generated nginx conf] *******************************************************************************************************
+changed: [192.168.121.209]
+
+TASK [Print nginx conf] ****************************************************************************************************************
+ok: [192.168.121.209] => {
+    "nginx_conf.stdout": "server {\n    listen 192.168.121.209:80;\n    listen 192.168.121.209:443 ssl;\n    root /var/www/example.internal/html;\n    index index.html;\n    server_name example.internal;\n\n    ssl_certificate \"/etc/pki/nginx/server.crt\";\n    ssl_certificate_key \"/etc/pki/nginx/private/server.key\";\n    ssl_session_cache shared:SSL:1m;\n    ssl_session_timeout  10m;\n    ssl_ciphers PROFILE=SYSTEM;\n    ssl_prefer_server_ciphers on;\n\n    location / {\n        try_files $uri $uri/ =404;\n    }\n}"
+}
+
+PLAY RECAP *****************************************************************************************************************************
+192.168.121.209            : ok=3    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0  

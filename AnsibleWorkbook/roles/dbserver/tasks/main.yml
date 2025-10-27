@@ -1,0 +1,25 @@
+---
+# tasks file for dbserver
+- name: Ensure deploy's home directory exists
+  ansible.builtin.file:
+    path: "{{ deploy_home }}"
+    state: directory
+    owner: deploy
+    group: deploy
+    mode: '0755'
+
+- name: Show found .md files
+  debug:
+    var: item
+  with_fileglob:
+    - "{{ playbook_dir }}/files/*.md"
+
+- name: Copy .md files to deploy's home directory
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: "{{ deploy_home }}/"
+    owner: deploy
+    group: deploy
+    mode: '0644'
+  with_fileglob:
+    - "{{ playbook_dir }}/files/*.md"

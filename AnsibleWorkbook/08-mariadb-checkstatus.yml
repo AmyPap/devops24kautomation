@@ -1,0 +1,26 @@
+---
+- name: Check database and user
+  hosts: db
+  become: true
+  tasks:
+   - name: Check if webappuser exists
+     community.mysql.mysql_query:
+        query: "SELECT User, Host FROM mysql.user WHERE User='webappuser';"
+        login_unix_socket: /var/lib/mysql/mysql.sock
+     register: user_info
+
+   - name: Show user query result
+     ansible.builtin.debug:
+        var: user_info
+
+   - name: Check if webappdb database exists
+     community.mysql.mysql_query:
+        query: "SHOW DATABASES;"
+        login_user: webappuser
+        login_password: secretpassword
+        login_unix_socket: /var/lib/mysql/mysql.sock
+     register: db_info
+
+   - name: Print result
+     ansible.builtin.debug:
+        var: db_info 

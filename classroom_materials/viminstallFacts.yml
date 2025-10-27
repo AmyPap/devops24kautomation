@@ -1,0 +1,8 @@
+--- 
+- name: just the facts, please
+  hosts: all
+  tasks:
+    - name: Output facts
+      ansible.builtin.debug:
+        var: ansible_facts
+        

@@ -1,0 +1,13 @@
+---
+ - name: Check IPs
+   hosts: web
+   become: true
+   tasks:
+
+    - name: Show generated nginx conf
+      ansible.builtin.shell: cat /etc/nginx/conf.d/example.internal.conf
+      register: nginx_conf
+
+    - name: Print nginx conf
+      ansible.builtin.debug:
+        var: nginx_conf.stdout
