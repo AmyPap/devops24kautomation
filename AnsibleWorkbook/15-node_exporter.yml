@@ -1,0 +1,8 @@
+---
+- name: Install and configure Node Exporter on all servers
+  hosts: all
+  become: true
+  roles:
+    - node_exporter
+
+

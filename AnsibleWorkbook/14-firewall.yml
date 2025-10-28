@@ -1,0 +1,17 @@
+---
+- name: Configure the web server with firewall , webserver roles
+  hosts: web
+  become: true
+  vars_files:
+    - 11-vault.yml
+  roles:
+    - webserver
+    - firewall
+
+- name: Configure the database server with firewall , dbserver roles
+  hosts: db
+  become: true
+  roles:
+    - dbserver
+    - firewall
+

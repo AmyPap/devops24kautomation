@@ -1,0 +1,81 @@
+---
+# tasks file for node_exporter
+
+- name: Download node_exporter
+  ansible.builtin.get_url:
+    url: "https://github.com/prometheus/node_exporter/releases/download/v1.10.2/node_exporter-1.10.2.linux-amd64.tar.gz"
+    dest: /tmp/node_exporter.tar.gz
+    mode: "0644"
+
+- name: Extract node_exporter archive
+  ansible.builtin.unarchive:
+    src: /tmp/node_exporter.tar.gz
+    dest: /opt/
+    remote_src: true
+
+- name: Move node_exporter binary to /usr/sbin/
+  ansible.builtin.copy:
+    src: /opt/node_exporter-1.10.2.linux-amd64/node_exporter
+    dest: /usr/sbin/node_exporter
+    mode: '0755'
+    remote_src: true
+
+- name: Create node system user
+  ansible.builtin.user:
+    name: node_exporter
+    shell: /sbin/nologin
+    system: true
+    create_home: false
+
+- name: Create textfile collector folder
+  ansible.builtin.file:
+    path: /var/lib/node_exporter/textfile_collector
+    state: directory
+    owner: node_exporter
+    group: node_exporter
+    mode: '0755'
+
+- name: Deploy sysconfig file for node_exporter
+  ansible.builtin.copy:
+    src: sysconfig.node_exporter
+    dest: /etc/sysconfig/node_exporter
+    owner: root
+    group: root
+    mode: '0644'
+  notify: restart node_exporter
+
+- name: Deploy systemd service for node_exporter
+  ansible.builtin.copy:
+    src: node_exporter.service
+    dest: /etc/systemd/system/node_exporter.service
+    owner: root
+    group: root
+    mode: '0644'
+  notify: reload systemd
+
+
+- name: Deploy systemd socket for node_exporter
+  ansible.builtin.copy:
+    src: node_exporter.socket
+    dest: /etc/systemd/system/node_exporter.socket
+    owner: root
+    group: root
+    mode: '0644'
+  notify: reload systemd
+
+- name: Reload systemd
+  ansible.builtin.systemd:
+    daemon_reload: true
+
+- name: Enable and start node_exporter.socket
+  ansible.builtin.systemd:
+    name: node_exporter.socket
+    enabled: true
+    state: started
+
+- name: Open TCP port 9100 in firewalld
+  ansible.posix.firewalld:
+    port: 9100/tcp
+    permanent: true
+    state: enabled
+    immediate: true

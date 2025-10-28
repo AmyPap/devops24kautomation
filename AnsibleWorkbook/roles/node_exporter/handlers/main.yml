@@ -1,0 +1,10 @@
+---
+# handlers file for node_exporter
+- name: reload systemd
+  ansible.builtin.systemd:
+    daemon_reload: yes
+
+- name: restart node_exporter
+  ansible.builtin.systemd:
+    name: node_exporter.socket
+    state: restarted

@@ -1,0 +1,22 @@
+---
+# tasks file for roles/firewall
+- name: Ensure firewalld and dependencies are installed
+  ansible.builtin.package:
+    name:
+      - firewalld
+      - python3-firewall
+    state: present
+
+- name: Enable and start firewalld
+  ansible.builtin.service:
+    name: firewalld
+    state: started
+    enabled: true
+
+- name: Open firewall services  based on host group
+  ansible.posix.firewalld:
+    service: "{{ item }}"
+    permanent: true
+    state: enabled
+    immediate: true
+  loop: "{{ firewall_services }}"
