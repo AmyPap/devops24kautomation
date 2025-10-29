@@ -1,0 +1,7 @@
+---
+# defaults file for roles/deploy_sudo
+
+deploy_username: deploy
+deploy_password_hash: "$6$nvlAuF/8x3WmLaM6$4ApeVLEQvWT2ZCPpSlkyi728JdL0EIFHgt5fZQs5CKhTkXWweUl1hIagCFEhAW/JJPfk8Aqfo5tXvQVKgiUq5/"
+sudoers_file: "/etc/sudoers.d/{{ deploy_username }}"
+

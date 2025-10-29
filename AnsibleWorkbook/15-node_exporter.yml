@@ -5,4 +5,9 @@
   roles:
     - node_exporter
 
-
+# för prometheus-konfigurationen och containarna används playbooken prometheys.yml
+# som körs lokalt (localhost) och kan konfigueras med IP-adresserna för de virtuella maskinerna
+# Den ingår inte här för att hålla övninden fokuserad på node_exporter-roll
+# om man har redan kört den i miljön gör man 
+# podman pod stop prometheus
+# podman pod rm +f prometheus

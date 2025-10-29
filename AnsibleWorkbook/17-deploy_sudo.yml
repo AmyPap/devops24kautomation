@@ -1,0 +1,7 @@
+---
+- name: Enforce sudo password for deploy
+  hosts: all
+  become: true
+
+  roles:
+    - deploy_sudo

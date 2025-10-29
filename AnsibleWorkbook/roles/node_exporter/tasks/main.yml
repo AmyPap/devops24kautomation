@@ -44,7 +44,7 @@
     mode: '0644'
   notify: restart node_exporter
 
-- name: Deploy systemd service for node_exporter
+- name: Deploy node_exporter.service file
   ansible.builtin.copy:
     src: node_exporter.service
     dest: /etc/systemd/system/node_exporter.service
@@ -53,8 +53,7 @@
     mode: '0644'
   notify: reload systemd
 
-
-- name: Deploy systemd socket for node_exporter
+- name: Deploy node_exporter.socket file
   ansible.builtin.copy:
     src: node_exporter.socket
     dest: /etc/systemd/system/node_exporter.socket

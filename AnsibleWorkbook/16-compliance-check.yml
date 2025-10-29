@@ -1,0 +1,8 @@
+---
+ - name: Security Compliance Checks
+   hosts: all
+   become: true
+   gather_facts: yes
+
+   roles:
+     - compliance_check

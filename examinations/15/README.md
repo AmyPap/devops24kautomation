@@ -51,3 +51,29 @@ will get you on the right track, for instance if you've changed any of the Prome
 
 * https://github.com/prometheus/node_exporter/tree/master/examples/systemd
 * https://prometheus.io/docs/guides/node-exporter/
+
+
+### Answer
+
+administrator@administrator-Precision-T1650:~/Desktop/devops24kautomation/AnsibleWorkbook$ podman --version
+podman version 4.9.3
+administrator@administrator-Precision-T1650:~/Desktop/devops24kautomation/AnsibleWorkbook$ ansible-playbook prometheus.yml 
+
+PLAY [Configure prometheus on your local machine] **************************************************************************************
+
+TASK [Gathering Facts] *****************************************************************************************************************
+ok: [localhost]
+
+TASK [Write Prometheus config] *********************************************************************************************************
+changed: [localhost]
+
+TASK [Ensure Prometheus container is running] ******************************************************************************************
+changed: [localhost]
+
+TASK [Ensure Node Exporter container is running] ***************************************************************************************
+changed: [localhost]
+
+PLAY RECAP *****************************************************************************************************************************
+localhost                  : ok=4    changed=3    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+
+

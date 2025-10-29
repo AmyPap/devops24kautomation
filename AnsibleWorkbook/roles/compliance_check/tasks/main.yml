@@ -1,0 +1,117 @@
+---
+# tasks file for roles/compliance_check
+- name: Gather package facts
+  ansible.builtin.package_facts:
+
+- name: Check if telnet-server is not installed
+  ansible.builtin.assert:
+    that: "'telnet-server' not in ansible_facts.packages"
+    success_msg: telnet-server is NOT installed
+    fail_msg: telnet-server is installed
+  ignore_errors: true
+
+- name: Check if firewalld is installed and running
+  ansible.builtin.systemd:
+    name: firewalld
+  register: firewalld_status
+
+- name: Check if firewalld is active
+  ansible.builtin.assert:
+    that:
+      - firewalld_status.status.ActiveState == "active"
+    success_msg: firewalld is running
+    fail_msg: firewalld is not running
+  ignore_errors: true
+
+- name: Check audit package is installed
+  ansible.builtin.assert:
+    that: "'audit' in ansible_facts.packages"
+    success_msg: audit package is installed
+    fail_msg: audit package is NOT installed
+  ignore_errors: true
+
+- name: Check if SELinux is enabled and enforcing
+  ansible.builtin.assert:
+    that:
+      - ansible_facts.selinux.status == "enabled"
+      - ansible_facts.selinux.mode == "enforcing"
+    success_msg: SELinux is enforcing
+    fail_msg: SELinux is not enforcing
+  ignore_errors: true
+
+- name: Check if /tmp is a seperate partition
+  ansible.builtin.assert:
+    that: ansible_mounts | selectattr('mount', 'equalto', '/tmp') | list | length > 0
+    success_msg: "/tmp is mounted as a separate partition"
+    fail_msg: "/tmp is NOT a separate partition"
+  ignore_errors: true
+
+- name: Check rsyslog is installed
+  ansible.builtin.assert:
+    that: "'rsyslog' in ansible_facts.packages"
+    success_msg: rsyslog is installed
+    fail_msg: rsyslog is NOT installed
+  ignore_errors: true
+
+
+- name: Find log files
+  ansible.builtin.find:
+    paths: /var/log
+    recurse: yes
+  register: log_files
+
+- name: Assert all log files are root-owned
+  ansible.builtin.assert:
+    that:
+      - log_files.files | map(attribute='uid') | list | unique == [0]
+    success_msg: All log files are root-owned
+    fail_msg: Some log files are NOT root-owned
+  ignore_errors: true
+
+- name: Stat /etc/passwd
+  ansible.builtin.stat:
+    path: /etc/passwd
+  register: passwd_stat
+
+- name: Assert /etc/passwd is secure
+  ansible.builtin.assert:
+    that:
+      - passwd_stat.stat.mode == '0644'
+      - passwd_stat.stat.uid == 0
+      - passwd_stat.stat.gid == 0
+    success_msg: "/etc/passwd permissions are correct"
+    fail_msg: "/etc/passwd permissions are incorrect"
+  ignore_errors: true
+
+
+
+- name: Stat /etc/shadow
+  ansible.builtin.stat:
+    path: /etc/shadow
+  register: shadow_stat
+
+- name: Assert /etc/shadow is secure
+  ansible.builtin.assert:
+    that:
+      - shadow_stat.stat.mode == '0000'
+      - shadow_stat.stat.uid == 0
+      - shadow_stat.stat.gid == 0
+    success_msg: "/etc/shadow permissions are correct"
+    fail_msg: "/etc/shadow permissions are incorrect"
+  ignore_errors: true
+
+- name: Stat /etc/group
+  ansible.builtin.stat:
+    path: /etc/group
+  register: group_stat
+
+- name: Assert /etc/group is secure
+  ansible.builtin.assert:
+    that:
+      - group_stat.stat.mode == '0644'
+      - group_stat.stat.uid == 0
+      - group_stat.stat.gid == 0
+    success_msg: "/etc/group permissions are correct"
+    fail_msg: "/etc/group permissions are incorrect"
+
+

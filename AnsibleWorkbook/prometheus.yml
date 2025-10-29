@@ -13,8 +13,8 @@
           static_configs:
             - targets:
                 - 'node-exporter:9100'
-                - '192.168.121.209:9100'
-                - '192.168.121.142:9100'
+                - '192.168.121.155:9100'
+                - '192.168.121.246:9100'
           relabel_configs:
             - source_labels: [__address__]
               regex: 'node-exporter:9100'
@@ -33,6 +33,7 @@
         name: prometheus
         image: quay.io/prometheus/prometheus:latest
         pod: new:prometheus
+        state: started
         volumes:
           - "/tmp/scrape-config.yml:/etc/prometheus/prometheus.yml"
           - "prometheus_data:/data"

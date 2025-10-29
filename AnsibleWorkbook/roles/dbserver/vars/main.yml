@@ -1,3 +1,5 @@
 ---
 # vars file for dbserver
 deploy_home: "/home/deploy"
+db_name: webappdb
+db_user: webappuser

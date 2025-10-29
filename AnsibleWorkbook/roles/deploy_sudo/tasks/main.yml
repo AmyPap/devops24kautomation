@@ -1,0 +1,15 @@
+---
+# tasks file for roles/deploy_sudo
+- name: Set password for deploy user
+  ansible.builtin.user:
+    name: "{{ deploy_username }}"
+    password: "{{ deploy_password_hash }}"
+
+- name: Replace NOPASSWD sudo rule
+  ansible.builtin.lineinfile:
+    path: "{{ sudoers_file }}"
+    regexp: '^%{{ deploy_username }}'
+    line: "%{{ deploy_username }} ALL=(ALL) ALL"
+    validate: '/usr/sbin/visudo -cf %s'
+    create: true
+    mode: '0440'

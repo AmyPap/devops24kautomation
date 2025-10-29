@@ -1,5 +1,9 @@
 ---
 # tasks file for roles/firewall
+- name: Show firewall services to be applied
+  debug:
+    var: firewall_services
+
 - name: Ensure firewalld and dependencies are installed
   ansible.builtin.package:
     name:
@@ -16,7 +20,10 @@
 - name: Open firewall services  based on host group
   ansible.posix.firewalld:
     service: "{{ item }}"
+    zone: public
     permanent: true
     state: enabled
     immediate: true
   loop: "{{ firewall_services }}"
+
+
